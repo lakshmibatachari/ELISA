@@ -10,8 +10,13 @@ library(readxl)
 library(tidyverse)
 theme_set(theme_classic())
 source("ELISA functions.R")
+library("dendextend")
+library(ape)
+library(ggdendro)
+library(factoextra)
 ```
 
+Calculate IL-10 concentrations for each file and combine data frame
 ```{r}
 fileNames <- c("ELISA_data/091918 IL10 Plate 1.xlsx", "ELISA_data/091918 IL10 Plate 2.xlsx")
 
@@ -19,12 +24,46 @@ processedFiles <- map(fileNames, analyze)
 combinedData <- bind_rows(processedFiles)
 ```
 
-
-
+Plot all samples
 ```{r}
-ggplot(combinedData, aes(x = reorder(sample, -concentration), y = concentration)) + 
-  geom_bar(stat = "identity")+
+pdf("barplot.pdf", width = 15, height = 5)
+bar <- ggplot(combinedData, aes(x = reorder(sample, -concentration), y = concentration)) + 
+  geom_bar(stat = "identity") +
   xlab("Sample ID") +
   ylab("IL-10 Concentration (pg/mL)") + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+print(bar)
+dev.off()
 ```
+
+```{r}
+x <- combinedData$concentration
+
+
+d <- dist(combinedData, method = "euclidean")
+hc1 <- hclust(d, method = "complete")
+dend <- as.dendrogram(hc1)
+
+
+labels(dend) <- paste(as.character(combinedData$sample)[order.dendrogram(dend)], sep = "")
+
+pdf("dendro.pdf", width = 15, height = 15)
+samplePlot <- fviz_dend(dend, k = 4, cex = 1, color_labels_by_k = TRUE,type = "circular")
+
+print(samplePlot)
+dev.off()
+
+
+
+#get_leaves_nodePar(dend)[[1]]
+#par( mfrow = c(1,1), mar= c(2, 6, 0.000001, 10))
+
+#plot(dend, horiz = TRUE, center = TRUE,  xlab = "Height")
+
+#plot(hc1, cex = 0.5)
+
+#groups <- cutree(hc1, k =5)
+#rect.hclust(hc1, k=4, border = "brown1")
+```
+
+
