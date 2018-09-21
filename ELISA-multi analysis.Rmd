@@ -1,0 +1,30 @@
+---
+title: "ELISA-multi analysis"
+author: "Lakshmi Batachari"
+date: "September 20, 2018"
+output: html_document
+---
+
+```{r, message = FALSE}
+library(readxl)
+library(tidyverse)
+theme_set(theme_classic())
+source("ELISA functions.R")
+```
+
+```{r}
+fileNames <- c("ELISA_data/091918 IL10 Plate 1.xlsx", "ELISA_data/091918 IL10 Plate 2.xlsx")
+
+processedFiles <- map(fileNames, analyze)
+combinedData <- bind_rows(processedFiles)
+```
+
+
+
+```{r}
+ggplot(combinedData, aes(x = reorder(sample, -concentration), y = concentration)) + 
+  geom_bar(stat = "identity")+
+  xlab("Sample ID") +
+  ylab("IL-10 Concentration (pg/mL)") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
