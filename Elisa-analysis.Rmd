@@ -41,7 +41,7 @@ slope <- linearFit$coefficients[2]
 Calculate and plot IL10 concentrations
 ```{r}
 IL10Conc <- OD450data %>%
-  group_by(sample, dilutionFactor) %>%
+  group_by(sample, ID, dilutionFactor) %>%
   summarize(meanValue = mean(OD450)) %>%
   mutate(`concentration` = max(0, (meanValue*slope + y_intercept)*dilutionFactor))
 

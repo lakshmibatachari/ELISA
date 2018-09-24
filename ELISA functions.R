@@ -13,7 +13,7 @@ analyze <- function(oneFileName) {
   slope <- linearFit$coefficients[2]
   
   IL10Conc <- OD450data %>%
-    group_by(sample, dilutionFactor) %>%
+    group_by(sample, ID, dilutionFactor) %>%
     summarize(meanValue = mean(OD450)) %>%
     mutate(`concentration` = max(0, (meanValue*slope + y_intercept)*dilutionFactor))
   

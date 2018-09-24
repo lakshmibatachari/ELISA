@@ -34,6 +34,15 @@ bar <- ggplot(combinedData, aes(x = reorder(sample, -concentration), y = concent
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 print(bar)
 dev.off()
+
+ggplot(combinedData, aes(x = ID, y = concentration)) + 
+  geom_bar(stat = "identity") +
+  xlab("Sample ID") +
+  ylab("IL-10 Concentration (pg/mL)") + 
+  scale_x_continuous(breaks = seq(1, 60, 1))+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size =7))
+  
+
 ```
 
 ```{r}
