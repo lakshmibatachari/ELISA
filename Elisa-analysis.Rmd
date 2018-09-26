@@ -18,7 +18,7 @@ theme_set(theme_classic())
 ```
 
 ```{r}
-fileName <- c("ELISA_data/091918 IL10 Plate 2.xlsx")
+fileName <- c("ELISA_data/092518 IFNg ELISA Plate2.xlsx")
 standards <- read_excel(fileName, sheet = 2)
 OD450data <- read_excel(fileName, sheet = 3)
 ```
@@ -38,18 +38,21 @@ slope <- linearFit$coefficients[2]
 
 
 ```
-Calculate and plot IL10 concentrations
+Calculate and plot cytokine concentrations
 ```{r}
-IL10Conc <- OD450data %>%
-  group_by(sample, ID, dilutionFactor) %>%
+cytokineName <- "IFNg"
+
+cytokineConc <- OD450data %>%
+  group_by(sampleName, ID, dilutionFactor, cytokine) %>%
   summarize(meanValue = mean(OD450)) %>%
   mutate(`concentration` = max(0, (meanValue*slope + y_intercept)*dilutionFactor))
 
-ggplot(IL10Conc, aes(x = reorder(sample, -concentration), y = concentration)) + 
+ggplot(cytokineConc, aes(x = reorder(sampleName, -concentration), y = concentration)) + 
   geom_bar(stat = "identity")+
   xlab("Sample Name") +
-  ylab("IL-10 Concentration (pg/mL)") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  ylab("Concentration (pg/mL)") + 
+  ggtitle(cytokineName) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), plot.title = element_text(hjust = 0.5))
 
 
 
