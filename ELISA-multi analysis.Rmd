@@ -18,7 +18,7 @@ library(factoextra)
 
 Calculate IL-10 concentrations for each file and combine data frame
 ```{r}
-fileNames <- c("ELISA_data/091918 IL10 Plate 1.xlsx", "ELISA_data/091918 IL10 Plate 2.xlsx")
+fileNames <- c("ELISA_data/091918 IL10 ELISA Plate1.xlsx","ELISA_data/091918 IL10 ELISA Plate2.xlsx", "ELISA_data/092518 IFNg ELISA Plate1.xlsx", "ELISA_data/092518 IFNg ELISA Plate2.xlsx")
 
 processedFiles <- map(fileNames, analyze)
 combinedData <- bind_rows(processedFiles)
@@ -26,15 +26,15 @@ combinedData <- bind_rows(processedFiles)
 
 Plot all samples
 ```{r}
-pdf("barplot.pdf", width = 15, height = 5)
-bar <- ggplot(combinedData, aes(x = reorder(sample, -concentration), y = concentration)) + 
-  geom_bar(stat = "identity") +
-  xlab("Sample ID") +
-  ylab("IL-10 Concentration (pg/mL)") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-print(bar)
-dev.off()
 
+#plot by sample name, differentiate cytokines with different colors
+ ggplot(combinedData) + 
+  geom_bar(stat = "identity", aes(x = sampleName, y = concentration, fill = cytokine), position = "dodge") +
+  xlab("Sample Name") +
+  ylab("Concentration (pg/mL)") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size =6))
+
+#plot by sample ID
 ggplot(combinedData, aes(x = ID, y = concentration)) + 
   geom_bar(stat = "identity") +
   xlab("Sample ID") +
@@ -42,9 +42,10 @@ ggplot(combinedData, aes(x = ID, y = concentration)) +
   scale_x_continuous(breaks = seq(1, 60, 1))+
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size =7))
   
-
+#reorder(sampleName, -concentration)
 ```
 
+Hierarchical clustering ward method
 ```{r}
 x <- combinedData$concentration
 
@@ -54,7 +55,7 @@ hc1 <- hclust(d, method = "complete")
 dend <- as.dendrogram(hc1)
 
 
-labels(dend) <- paste(as.character(combinedData$sample)[order.dendrogram(dend)], sep = "")
+labels(dend) <- paste(as.character(combinedData$sampleName)[order.dendrogram(dend)], sep = "")
 
 pdf("dendro.pdf", width = 15, height = 15)
 samplePlot <- fviz_dend(dend, k = 4, cex = 1, color_labels_by_k = TRUE,type = "circular")
