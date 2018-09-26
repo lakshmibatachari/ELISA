@@ -12,10 +12,10 @@ analyze <- function(oneFileName) {
   y_intercept <- linearFit$coefficients[1]
   slope <- linearFit$coefficients[2]
   
-  IL10Conc <- OD450data %>%
-    group_by(sample, ID, dilutionFactor) %>%
+  cytokineConc <- OD450data %>%
+    group_by(sampleName, ID, dilutionFactor, cytokine) %>%
     summarize(meanValue = mean(OD450)) %>%
     mutate(`concentration` = max(0, (meanValue*slope + y_intercept)*dilutionFactor))
   
-  IL10Conc
+  cytokineConc
 }
