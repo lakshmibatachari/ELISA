@@ -40,14 +40,14 @@ slope <- linearFit$coefficients[2]
 ```
 Calculate and plot cytokine concentrations
 ```{r}
-cytokineName <- "IFNg"
+cytokineName <- "IL17"
 
 cytokineConc <- OD450data %>%
   group_by(sampleName, ID, dilutionFactor, cytokine) %>%
   summarize(meanValue = mean(OD450)) %>%
   mutate(`concentration` = max(0, (meanValue*slope + y_intercept)*dilutionFactor))
 
-ggplot(cytokineConc, aes(x = reorder(sampleName, -concentration), y = concentration)) + 
+ggplot(cytokineConc, aes(x = ID, y = concentration)) + 
   geom_bar(stat = "identity")+
   xlab("Sample Name") +
   ylab("Concentration (pg/mL)") + 
