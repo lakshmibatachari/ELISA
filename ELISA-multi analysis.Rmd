@@ -14,21 +14,62 @@ library("dendextend")
 library(ape)
 library(ggdendro)
 library(factoextra)
+library(cluster)
 ```
 
-Calculate IL-10 concentrations for each file and combine data frame
+Calculate concentrations for each file and combine data frame
 ```{r}
-fileNames <- c("ELISA_data/091918 IL10 ELISA Plate1.xlsx","ELISA_data/091918 IL10 ELISA Plate2.xlsx", "ELISA_data/092518 IFNg ELISA Plate1.xlsx", "ELISA_data/092518 IFNg ELISA Plate2.xlsx")
+fileNames <- c("ELISA_data/091918 IL10 ELISA Plate1.xlsx","ELISA_data/091918 IL10 ELISA Plate2.xlsx", "ELISA_data/092518 IFNg ELISA Plate1.xlsx", "ELISA_data/092518 IFNg ELISA Plate2.xlsx", "ELISA_data/092518 IL17 ELISA Plate1.xlsx", "ELISA_data/092518 IL17 ELISA Plate2.xlsx")
 
 processedFiles <- map(fileNames, analyze)
 combinedData <- bind_rows(processedFiles)
 ```
 
+Create a plot for each cytokine
+
+```{r}
+#IL10 
+IL10only <- combinedData %>%
+  filter(cytokine=="IL10")
+
+ggplot(IL10only)+
+  geom_bar(stat = "identity", aes(x = reorder(sampleName, -concentration), y = concentration)) +
+  ggtitle("IL10") +
+  xlab("Sample Name")+
+  ylab("Concentration (pg/ml)")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 6), plot.title = element_text(hjust = .5))
+
+#IFNg
+IFNgonly <- combinedData %>%
+  filter(cytokine=="IFNg")
+
+ggplot(IFNgonly)+
+  geom_bar(stat = "identity", aes(x = reorder(sampleName, -concentration), y = concentration)) +
+  ggtitle("IFNg")+
+  xlab("Sample Name")+
+  ylab("Concentration (pg/ml)")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 6), plot.title=element_text(hjust = .5))
+
+#IL17
+IL17only <- combinedData %>%
+  filter(cytokine=="IL17")
+
+ggplot(IL17only)+
+  geom_bar(stat = "identity", aes(x = reorder(sampleName, -concentration), y = concentration)) +
+  ggtitle("IL17")+
+  xlab("Sample Name")+
+  ylab("Concentration (pg/ml)")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 6), plot.title=element_text(hjust = .5))
+
+```
+
+
+
 Plot all samples
 ```{r}
 
 #plot by sample name, differentiate cytokines with different colors
- ggplot(combinedData) + 
+ggplot(combinedData) + 
   geom_bar(stat = "identity", aes(x = sampleName, y = concentration, fill = cytokine), position = "dodge") +
   xlab("Sample Name") +
   ylab("Concentration (pg/mL)") + 
@@ -41,21 +82,75 @@ ggplot(combinedData, aes(x = ID, y = concentration)) +
   ylab("IL-10 Concentration (pg/mL)") + 
   scale_x_continuous(breaks = seq(1, 60, 1))+
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size =7))
+
+#facet by cytokine
+ggplot(combinedData) + 
+  geom_bar(stat = "identity", aes(x = reorder(sampleName, -concentration), y = concentration, fill = factor(cytokine)))+
+  facet_grid(cytokine~., scales = "free") +
+  xlab("Sample Name") +
+  ylab("Concentration (pg/mL)") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size =6), legend.position = "none") 
+
   
 #reorder(sampleName, -concentration)
 ```
 
+K-means cluster
+```{r}
+IL10values <- subset(combinedData, cytokine == "IL10", 
+select=c(sampleName, concentration))
+names(IL10values)[2]<-"IL10"
+
+IFNgvalues <- subset(combinedData, cytokine == "IFNg", 
+select=c(sampleName, concentration))
+names(IFNgvalues)[2]<-"IFNg"
+
+IL17values <- subset(combinedData, cytokine == "IL17", 
+select=c(sampleName, concentration))
+names(IL17values)[2]<-"IL17"
+
+a <- merge(IL10values, IFNgvalues)
+mergedData <- merge(a, IL17values)
+
+set.seed(25)
+mergedData <- na.omit(mergedData)
+
+mergedData.scaled <- scale(mergedData[, -1])
+
+k5 <- kmeans(mergedData.scaled, centers = 5, nstart = 25)
+
+row.names(mergedData.scaled) <- mergedData[,1]
+
+fviz_cluster(k5, data = mergedData.scaled,
+             palette = "Set2", 
+             ellipse.type = "norm", # Concentration ellipse
+             star.plot = FALSE, # Add segments from centroids to items
+             repel = TRUE, # Avoid label overplotting (slow)
+             ggtheme = theme_classic(), 
+             labelsize = 5
+             )
+
+
+str(k5)
+
+
+
+
+
+```
+
+
 Hierarchical clustering ward method
 ```{r}
-x <- combinedData$concentration
+x <- IL10only$concentration
+x <- scale(x)
 
 
-d <- dist(combinedData, method = "euclidean")
-hc1 <- hclust(d, method = "complete")
+d <- dist(x)
+hc1 <- hclust(d, method = "average")
 dend <- as.dendrogram(hc1)
 
-
-labels(dend) <- paste(as.character(combinedData$sampleName)[order.dendrogram(dend)], sep = "")
+labels(dend) <- paste(as.character(IL10only$sampleName)[order.dendrogram(dend)], sep = "")
 
 pdf("dendro.pdf", width = 15, height = 15)
 samplePlot <- fviz_dend(dend, k = 4, cex = 1, color_labels_by_k = TRUE,type = "circular")
