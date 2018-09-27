@@ -15,6 +15,7 @@ library(ape)
 library(ggdendro)
 library(factoextra)
 library(cluster)
+library(NbClust)
 ```
 
 Calculate concentrations for each file and combine data frame
@@ -112,27 +113,43 @@ names(IL17values)[2]<-"IL17"
 a <- merge(IL10values, IFNgvalues)
 mergedData <- merge(a, IL17values)
 
-set.seed(25)
+#remove NAs and scale data so that mean = 0 and SD = 1
 mergedData <- na.omit(mergedData)
-
 mergedData.scaled <- scale(mergedData[, -1])
 
+#set seed ensures that results are reproducible by defining the number of initial centroids
+set.seed(4)
+
+#Perform k-means cluster analysis, nstart sets the number of initial configurations before choosing optimal one
 k5 <- kmeans(mergedData.scaled, centers = 5, nstart = 25)
 
+#Re-introduce sample names to each row
 row.names(mergedData.scaled) <- mergedData[,1]
 
+#Create a plot to show clusters
 fviz_cluster(k5, data = mergedData.scaled,
              palette = "Set2", 
-             ellipse.type = "norm", # Concentration ellipse
              star.plot = FALSE, # Add segments from centroids to items
              repel = TRUE, # Avoid label overplotting (slow)
              ggtheme = theme_classic(), 
-             labelsize = 5
+             labelsize = 6, 
+             main = "K-means Cluster Analysis",
+             xlab = FALSE,
+             ylab = FALSE
              )
 
+#determine optimal number of clusters using Elbow method
+fviz_nbclust(mergedData.scaled, kmeans, method = "wss") +
+  geom_vline(xintercept = 4, linetype = 2) +
+  labs(subtitile = "Elbow method")
 
-str(k5)
+#add new column containing cluster group to mergedData
+mergedData.clusters <- cbind(mergedData, group = k5$cluster)
 
+high <- filter(mergedData.clusters, group == "3") 
+
+low <- filter(mergedData.clusters, group == "4") 
+ 
 
 
 
@@ -142,21 +159,39 @@ str(k5)
 
 Hierarchical clustering ward method
 ```{r}
-x <- IL10only$concentration
-x <- scale(x)
+df <- IL17only
+
+X <- df$concentration
+X <- na.omit(X)
+X <- scale(X)
+row.names(X) <- df$sampleName
 
 
-d <- dist(x)
-hc1 <- hclust(d, method = "average")
+d <- dist(X)
+hc1 <- agnes(d, method = "ward")
+hc1$ac
 dend <- as.dendrogram(hc1)
 
-labels(dend) <- paste(as.character(IL10only$sampleName)[order.dendrogram(dend)], sep = "")
 
 pdf("dendro.pdf", width = 15, height = 15)
 samplePlot <- fviz_dend(dend, k = 4, cex = 1, color_labels_by_k = TRUE,type = "circular")
 
 print(samplePlot)
 dev.off()
+
+
+#define different clustering methods
+m <- c("average", "single", "complete", "ward")
+names(m)<- c("average", "single", "complete", "ward")
+
+#compute agglomerative coefficient, which measures the quality of agg clustering
+ac <- function(x) {
+  agnes(df, method = x)$ac
+}
+
+map_dbl(m, ac)
+
+
 
 
 
@@ -171,4 +206,16 @@ dev.off()
 #rect.hclust(hc1, k=4, border = "brown1")
 ```
 
+```{r}
+
+plot(IL10only$concentration)
+
+par (mfrow = c(2,2)) 
+for (i in 1:4) {
+  set.seed(4)
+  clusters <-kmeans(mergedData.scaled, centers= 4) 
+  plot(IL10only$concentration, col = clusters$cluster)
+  }
+
+```
 
