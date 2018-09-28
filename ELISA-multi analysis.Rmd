@@ -36,7 +36,7 @@ IL10only <- combinedData %>%
 ggplot(IL10only)+
   geom_bar(stat = "identity", aes(x = reorder(sampleName, -concentration), y = concentration)) +
   ggtitle("IL10") +
-  xlab("Sample Name")+
+  xlab("Bacterial Product")+
   ylab("Concentration (pg/ml)")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 6), plot.title = element_text(hjust = .5))
 
@@ -47,7 +47,7 @@ IFNgonly <- combinedData %>%
 ggplot(IFNgonly)+
   geom_bar(stat = "identity", aes(x = reorder(sampleName, -concentration), y = concentration)) +
   ggtitle("IFNg")+
-  xlab("Sample Name")+
+  xlab("Bacterial Product")+
   ylab("Concentration (pg/ml)")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 6), plot.title=element_text(hjust = .5))
 
@@ -58,7 +58,7 @@ IL17only <- combinedData %>%
 ggplot(IL17only)+
   geom_bar(stat = "identity", aes(x = reorder(sampleName, -concentration), y = concentration)) +
   ggtitle("IL17")+
-  xlab("Sample Name")+
+  xlab("Bacterial Product")+
   ylab("Concentration (pg/ml)")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 6), plot.title=element_text(hjust = .5))
 
@@ -155,17 +155,36 @@ low <- filter(mergedData.clusters, group == "4")
 
 
 ```
+```{r}
+DF <- IFNgonly$concentration
+  DF <- na.omit(DF)
+  DF <- scale(DF)
+  row.names(DF) <- IFNgonly$sampleName
+  
+  
+  dist <- dist(DF)
+  hc1 <- agnes(DF, method = "ward")
+  dend <- as.dendrogram(hc1)
+  
+  
+  pdf("dendro.pdf", width = 15, height = 15)
+  samplePlot <- fviz_dend(dend, k = 3, cex = 1, color_labels_by_k = TRUE,type = "circular")
+  
+  print(samplePlot)
+  dev.off()
+```
 
 
 Hierarchical clustering ward method
 ```{r}
 
 #perform ward method hierarchical cluster analysis
-wardHCA(IL17only)
+wardHCA(IFNgonly)
 
 
 
-
+```
+```{r}
 df <- IL10only
 
 #define different clustering methods
@@ -208,7 +227,15 @@ for (i in 1:4) {
 ```
 
 ```{r}
+highlowDF<- read_excel("ELISA_data/High low subset.xlsx")
 
-wardHCA(IL10only)
+ggplot(highlowDF, aes(y = bacteria, x = cytokine)) + 
+  geom_tile(aes(fill = level)) + 
+  scale_fill_manual(values = c("#20b2aa", "#ff6961"), name = "Level")+
+  labs( x = "Cytokine", y = "Bacterial Product", title = "Relative Cytokine Levels") + 
+  theme_classic() 
+  
+  
+
 
 ```
