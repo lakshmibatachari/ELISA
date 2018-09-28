@@ -19,3 +19,22 @@ analyze <- function(oneFileName) {
   
   cytokineConc
 }
+
+wardHCA <- function(xx) {
+  y <- xx$concentration
+  y <- na.omit(y)
+  y <- scale(y)
+  row.names(y) <- xx$sampleName
+  
+  
+  distance <- dist(y)
+  hc2 <- agnes(distance, method = "ward")
+  dend2 <- as.dendrogram(hc2)
+  
+  
+  pdf("dendrogram.pdf", width = 15, height = 15)
+  samplePlot2 <- fviz_dend(dend2, k = 4, cex = 1, color_labels_by_k = TRUE,type = "circular")
+  
+  print(samplePlot2)
+  dev.off()
+}

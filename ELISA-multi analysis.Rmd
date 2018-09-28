@@ -159,26 +159,14 @@ low <- filter(mergedData.clusters, group == "4")
 
 Hierarchical clustering ward method
 ```{r}
-df <- IL17only
 
-X <- df$concentration
-X <- na.omit(X)
-X <- scale(X)
-row.names(X) <- df$sampleName
+#perform ward method hierarchical cluster analysis
+wardHCA(IL17only)
 
 
-d <- dist(X)
-hc1 <- agnes(d, method = "ward")
-hc1$ac
-dend <- as.dendrogram(hc1)
 
 
-pdf("dendro.pdf", width = 15, height = 15)
-samplePlot <- fviz_dend(dend, k = 4, cex = 1, color_labels_by_k = TRUE,type = "circular")
-
-print(samplePlot)
-dev.off()
-
+df <- IL10only
 
 #define different clustering methods
 m <- c("average", "single", "complete", "ward")
@@ -219,3 +207,8 @@ for (i in 1:4) {
 
 ```
 
+```{r}
+
+wardHCA(IL10only)
+
+```
