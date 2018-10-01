@@ -33,7 +33,7 @@ wardHCA <- function(xx) {
   
   
   pdf("dendrogram.pdf", width = 15, height = 15)
-  samplePlot2 <- fviz_dend(dend2, k = 4, cex = 1, color_labels_by_k = TRUE,type = "circular")
+  samplePlot2 <- fviz_dend(dend2, k = 2, cex = 1, color_labels_by_k = TRUE,type = "circular")
   
   print(samplePlot2)
   dev.off()
