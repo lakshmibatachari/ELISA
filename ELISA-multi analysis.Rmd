@@ -16,6 +16,13 @@ library(ggdendro)
 library(factoextra)
 library(cluster)
 library(NbClust)
+library(plot3D)
+library(plotly)
+
+
+
+
+
 ```
 
 Calculate concentrations for each file and combine data frame
@@ -118,10 +125,10 @@ mergedData <- na.omit(mergedData)
 mergedData.scaled <- scale(mergedData[, -1])
 
 #set seed ensures that results are reproducible by defining the number of initial centroids
-set.seed(4)
+set.seed(123)
 
 #Perform k-means cluster analysis, nstart sets the number of initial configurations before choosing optimal one
-k5 <- kmeans(mergedData.scaled, centers = 5, nstart = 25)
+k5 <- kmeans(mergedData.scaled, centers = 4, nstart = 25)
 
 #Re-introduce sample names to each row
 row.names(mergedData.scaled) <- mergedData[,1]
@@ -146,15 +153,59 @@ fviz_nbclust(mergedData.scaled, kmeans, method = "wss") +
 #add new column containing cluster group to mergedData
 mergedData.clusters <- cbind(mergedData, group = k5$cluster)
 
-high <- filter(mergedData.clusters, group == "3") 
 
-low <- filter(mergedData.clusters, group == "4") 
+
+#high <- filter(mergedData.clusters, group == "3") 
+#low <- filter(mergedData.clusters, group == "4") 
  
 
 
 
 
 ```
+```{r}
+
+#plot data in 3D space
+
+scatter3D(mergedData.clusters$IL10, mergedData.clusters$IFNg, mergedData.clusters$IL17, phi = 10, bty = "g",pch = 20, cex = 1, ticktype = "detailed", type = "h", xlab = "IL10", colvar = NULL)
+
+scatter3D(mergedData.clusters$IL10, mergedData.clusters$IFNg, mergedData.clusters$IL17, colvar = mergedData.clusters$group, phi = 10, bty = "g",pch = 20, cex = 1, ticktype = "detailed", type = "h", xlab = "IL10")
+
+
+```
+
+```{r}
+
+plot_ly(mergedData.clusters, x = ~IL10, y = ~IL17, y = ~IFNg, color = ~group)
+
+```
+
+
+
+Dimensionality reduction
+```{r}
+PCA <- prcomp(mergedData.scaled)
+plot(PCA)
+scorePCA <- as.data.frame(PCA$x)
+
+scorePCA.cluster <- cbind(scorePCA, group = k5$cluster)
+
+ggplot(scorePCA.cluster, aes(PC1, PC2, label = rownames(scorePCA.cluster))) +
+  geom_text(aes(colour = factor(group)), size  = 2) +
+  geom_point(cex  =0.2)
+
+```
+  
+
+
+
+
+```{r}
+
+
+
+```
+
 ```{r}
 DF <- IFNgonly$concentration
   DF <- na.omit(DF)
@@ -214,6 +265,7 @@ map_dbl(m, ac)
 ```
 
 ```{r}
+#shows that clusters change if initial seed parameter is undefined
 
 plot(IL10only$concentration)
 
@@ -225,17 +277,21 @@ for (i in 1:4) {
   }
 
 ```
-
+Heat map of high/low producers
 ```{r}
+
+
 highlowDF<- read_excel("ELISA_data/High low subset.xlsx")
 
 ggplot(highlowDF, aes(y = bacteria, x = cytokine)) + 
   geom_tile(aes(fill = level)) + 
   scale_fill_manual(values = c("#20b2aa", "#ff6961"), name = "Level")+
   labs( x = "Cytokine", y = "Bacterial Product", title = "Relative Cytokine Levels") + 
+  theme(panel.border = element_blank())
   theme_classic() 
   
   
+
 
 
 ```
