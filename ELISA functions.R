@@ -20,11 +20,11 @@ analyze <- function(oneFileName) {
   cytokineConc
 }
 
-wardHCA <- function(xx) {
-  y <- xx$concentration
+wardHCA <- function(dataSet) {
+  y <- dataSet$concentration
   y <- na.omit(y)
   y <- scale(y)
-  row.names(y) <- xx$sampleName
+  row.names(y) <- dataSet$sampleName
   
   
   distance <- dist(y)
@@ -33,8 +33,8 @@ wardHCA <- function(xx) {
   
   
   pdf("dendrogram.pdf", width = 15, height = 15)
-  samplePlot2 <- fviz_dend(dend2, k = 2, cex = 1, color_labels_by_k = TRUE,type = "circular")
+  dendroPlot <- fviz_dend(dend2, k = 3, cex = 1, color_labels_by_k = TRUE,type = "circular")
   
-  print(samplePlot2)
+  print(dendroPlot)
   dev.off()
 }
