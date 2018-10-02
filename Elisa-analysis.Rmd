@@ -47,7 +47,7 @@ cytokineConc <- OD450data %>%
   summarize(meanValue = mean(OD450)) %>%
   mutate(`concentration` = max(0, (meanValue*slope + y_intercept)*dilutionFactor))
 
-ggplot(cytokineConc, aes(x = ID, y = concentration)) + 
+ggplot(cytokineConc, aes(x = sampleName, y = concentration)) + 
   geom_bar(stat = "identity")+
   xlab("Sample Name") +
   ylab("Concentration (pg/mL)") + 
