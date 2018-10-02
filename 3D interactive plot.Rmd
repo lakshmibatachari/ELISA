@@ -1,0 +1,39 @@
+---
+title: "3D interactive"
+output: html_document
+---
+Download necessary packages
+
+```{r, message= FALSE}
+
+library(plotly)
+library(shiny)
+
+```
+
+
+A 3D interactive plot (using plotly) of cytokine profiles
+```{r}
+
+mergedData.clusters$group[which(mergedData.clusters$group == 1)] <- '1'
+mergedData.clusters$group[which(mergedData.clusters$group == 2)] <- '2'
+mergedData.clusters$group[which(mergedData.clusters$group == 3)] <- '3'
+mergedData.clusters$group[which(mergedData.clusters$group == 4)] <- '4'
+
+
+p <- mergedData.clusters %>%
+  plot_ly(x = ~IL10, y = ~IL17, z = ~IFNg, color = ~group, marker = list(size = 5), hoverinfo = 'text',
+        text = ~paste('</br>Bacterial Product: ', sampleName,
+                      '</br>IL-10: ', IL10,
+                      '</br>IL-17: ', IL17,
+                      '</br>IFNg: ', IFNg)) %>%
+  layout(title = "Cytokine Profile")
+ 
+p
+
+Sys.setenv("plotly_username"="lbatachari")
+Sys.setenv("plotly_api_key"="K7CwUdTaQaFIBIkz2ny8")
+
+chart_link = api_create(p, filename="Cytokine profile")
+chart_link
+```
